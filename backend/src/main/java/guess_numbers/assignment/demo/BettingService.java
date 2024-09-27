@@ -2,64 +2,69 @@ package guess_numbers.assignment.demo;
 
 import org.springframework.stereotype.Service;
 
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class BettingService {
 
-    public void validateGuess(int guessedNumber) {
+    private SecureRandom secureRandom = new SecureRandom();
+    private final double RTP = 95.0;
+    private List<Double> rtpHistory = new ArrayList<>();
 
-        if (guessedNumber < 2 || guessedNumber > 98) {
-            throw new IllegalArgumentException("Guessed number must be between 2 and 98.");
-        }
+    //CSPRNG random sayı generator
+    public int generateExactNumber() {
+        return secureRandom.nextInt(98 - 2 + 1) + 2;  // 2 ile 98 arasında güvenli bir rastgele sayı üret
     }
 
+    //kazanma yüzdesini hesabı
     public double calculateWinningPercentage(int guessedNumber) {
         int lowerBound = 2;
         int upperBound = 98;
 
         if (guessedNumber >= lowerBound && guessedNumber <= upperBound) {
-
             return ((upperBound - guessedNumber) / (double) (upperBound - lowerBound)) * 100;
         } else {
-            return 0.0;  // Outside the range, no win
+            return 0.0;
         }
     }
 
+    //payout hesbı
     public double calculatePayOut(double winningPercentage) {
-        double payOut;
-
-        if (winningPercentage >= 96) {
-            payOut = 1.02;
-
-        } else if (winningPercentage >= 90) {
-            payOut = 1.02 + ((96 - winningPercentage) / 6) * (2.80 - 1.02);
-
-        } else if (winningPercentage >= 30) {
-            payOut = 2.80 + ((90 - winningPercentage) / 60) * (4.00 - 2.80);
-
-        } else if (winningPercentage >= 10) {
-            payOut = 4.00 + ((30 - winningPercentage) / 20) * (5.80 - 4.00);
-
-        } else if (winningPercentage >= 1) {
-            payOut = 5.80 + ((10 - winningPercentage) / 9) * (50.00 - 5.80);
-
-        } else {
-            payOut = 50.00;
-
+        if (winningPercentage <= 0) {
+            return 50.0;
         }
 
-        final double MIN_PAYOUT = 1.02;
-        final double MAX_PAYOUT = 50.00;
-        if (payOut < MIN_PAYOUT) {
-            payOut = MIN_PAYOUT;
-        } else if (payOut > MAX_PAYOUT) {
-            payOut = MAX_PAYOUT;
-        }
-
-        return payOut;
+        return RTP / winningPercentage;  // Payout hesapla
     }
 
+    //RTP hesabı
+    public double calculateAndSaveRTP() {
+        double totalBets = 0.0;
+        double totalWinnings = 0.0;
+        int iterations = 1000000;  // 1 milyon simülasyon yapılacak şekilde
 
-    public int generateExactNumber() {
-        return (int) (Math.random() * (98 - 2 + 1)) + 2;  // Random number between 2 and 98
+        for (int i = 0; i < iterations; i++) {
+            double bet = 1;  // Her bahis 1 birim olacak
+            totalBets += bet;
+            int result = secureRandom.nextInt(100) + 1; //rastgele sayı üret 1 ile 100 arasında
+            int choice = secureRandom.nextInt(98 - 2 + 1) + 2; //tahmin edilen sayı 2 ile 98 arasında
+
+            if (result > choice) {
+                double payout = calculatePayOut(calculateWinningPercentage(choice));  //kazanç oranını hesapla
+                totalWinnings += payout;  //toplam kazançları güncelle
+            }
+        }
+
+        double currentRTP = (totalWinnings / totalBets) * 100;
+
+        rtpHistory.add(currentRTP);
+
+        return currentRTP;
+    }
+
+    public List<Double> getRtpHistory() {
+        return rtpHistory;
     }
 }

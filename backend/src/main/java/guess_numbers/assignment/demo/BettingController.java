@@ -26,7 +26,6 @@ public class BettingController {
     public synchronized ResponseEntity<Map<String, Object>> placeBet(@RequestBody Bet betRequest) {
         Map<String, Object> response = new HashMap<>();
         try {
-
             if (betRequest.getBetAmount() == 0) {
                 response.put("error", "Bet amount cannot be zero.");
                 return ResponseEntity.badRequest().body(response);
@@ -43,21 +42,15 @@ public class BettingController {
             }
 
             int exactNumber = bettingService.generateExactNumber();
-
             double winningPercentage = bettingService.calculateWinningPercentage(betRequest.getGuessedNumber());
-
             double payOut = bettingService.calculatePayOut(winningPercentage);
             betRequest.setPayOut(payOut);
-
             double winningAmount = betRequest.getBetAmount() * payOut;
-
             boolean userWon = exactNumber >= betRequest.getGuessedNumber() && exactNumber <= 98;
 
             if (userWon) {
-
                 totalAmount += winningAmount;
             } else {
-
                 totalAmount -= betRequest.getBetAmount();
             }
 
@@ -66,7 +59,7 @@ public class BettingController {
             }
 
             betRequest.setTotalAmount(totalAmount);
-
+            double currentRTP = bettingService.calculateAndSaveRTP();
             String resultMessage = userWon
                     ? String.format("You won! Your winning price is: %.2f", winningAmount)
                     : "You lost! Better luck next time.";
@@ -76,6 +69,9 @@ public class BettingController {
                     betRequest.getBetAmount(), betRequest.getGuessedNumber(), exactNumber, winningPercentage, payOut, totalAmount,
                     resultMessage
             ));
+
+            response.put("currentRTP", currentRTP);
+            response.put("rtpHistory", bettingService.getRtpHistory());
 
             return ResponseEntity.ok(response);
 
