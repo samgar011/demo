@@ -10,7 +10,7 @@ import java.util.List;
 public class BettingService {
 
     private SecureRandom secureRandom = new SecureRandom();
-    private final double RTP = 95.0;
+    private final double RTP = 98.0;
     private List<Double> rtpHistory = new ArrayList<>();
 
     //CSPRNG random sayı generator
