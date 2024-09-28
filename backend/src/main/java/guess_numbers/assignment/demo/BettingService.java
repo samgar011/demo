@@ -38,7 +38,8 @@ public class BettingService {
 
         return RTP / winningPercentage;  // Payout hesapla
     }
-    //test 
+    //test
+    //test
 
     //RTP hesabı
     public double calculateAndSaveRTP() {
